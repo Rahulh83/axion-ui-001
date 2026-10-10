@@ -1,28 +1,26 @@
 name: Trigger auto deployment for axion-ui-01
 
-# When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
   push:
-    branches: 
-      [ main ]
+    branches:
+      - main
     paths:
-    - '**'
-    - '.github/workflows/axion-ui-01-AutoDeployTrigger-8401e770-e638-4ff2-98f0-fbca705b2da1.yml'
+      - '**'
+      - '.github/workflows/axion-ui-01-AutoDeployTrigger-8401e770-e638-4ff2-98f0-fbca705b2da1.yml'
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
+
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout to the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Azure Login
         uses: azure/login@v2
@@ -35,15 +33,11 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
-          registryUrl: 
+          acrName: conapp
+          registryUrl: conapp.azurecr.io
           registryUsername: ${{ secrets.AXIONUI01_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.AXIONUI01_REGISTRY_PASSWORD }}
           containerAppName: axion-ui-01
           resourceGroup: rahul-rg
-          imageToBuild: default/[parameters('containerAppName')]:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
-
-
+          imageToBuild: conapp.azurecr.io/axion-ui-01:${{ github.sha }}
+          dockerfilePath: Dockerfile
