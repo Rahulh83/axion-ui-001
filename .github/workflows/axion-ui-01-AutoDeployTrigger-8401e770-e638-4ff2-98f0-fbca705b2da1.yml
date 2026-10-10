@@ -1,17 +1,19 @@
 name: Trigger auto deployment for axion-ui-01
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Build & Push Docker Image to ACR
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - '**'
-      - '.github/workflows/axion-ui-01-AutoDeployTrigger-8401e770-e638-4ff2-98f0-fbca705b2da1.yml'
 
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     permissions:
@@ -19,9 +21,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout to the branch
-        uses: actions/checkout@v4
-
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -29,15 +28,11 @@ jobs:
           tenant-id: ${{ secrets.AXIONUI01_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AXIONUI01_AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build and push container image to registry
+      - name: Deploy existing image to Container App
         uses: azure/container-apps-deploy-action@v2
         with:
-          appSourcePath: ${{ github.workspace }}
           acrName: conapp
-          registryUrl: conapp.azurecr.io
-          registryUsername: ${{ secrets.AXIONUI01_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.AXIONUI01_REGISTRY_PASSWORD }}
           containerAppName: axion-ui-01
           resourceGroup: rahul-rg
-          imageToBuild: conapp.azurecr.io/axion-ui-01:${{ github.sha }}
-          dockerfilePath: Dockerfile
+          imageToDeploy: conapp.azurecr.io/axion-ui:${{ github.event.workflow_run.head_sha || github.sha }}
+        
