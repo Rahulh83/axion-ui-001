@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  ACR_LOGIN_SERVER: bhakuacr.azurecr.io
-  DOCKER_IMAGE: bhakuacr.azurecr.io/axion-ui
+  ACR_LOGIN_SERVER: conapp.azurecr.io
+  DOCKER_IMAGE: conapp.azurecr.io/axion-ui
 
 jobs:
   build-and-push:
